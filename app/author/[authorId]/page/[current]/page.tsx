@@ -10,19 +10,20 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     authorId: string,
     current: string,
-  },
-  searchParams: {
-    draftKey: string,
-  }
+  }>
+  searchParams: Promise<{
+    draftKey?: string,
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params, searchParams}: Props, parent: ResolvingMetadata) {
   const settingsData = await getData('settings/')
-  const authorEndpoint = `people/${params.authorId}/`
+  const { authorId } = await params
+  const authorEndpoint = `people/${authorId}/`
   const authorData = await getData(authorEndpoint)
   const parentData = await(parent)
   const previousPreview = parentData.openGraph?.images || []
@@ -54,19 +55,21 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
 
 
 async function AuthorPage({params, searchParams}: Props) {
+  const { authorId, current } = await params
+  const { draftKey } = await searchParams
   
   /** Get data */
   const settingsData = await getData('settings/')
   const fields = defaultSettings.queryFields
   const postLimit = settingsData.postLimit || defaultSettings.postLimit
-  const pageCurrent = Number(params.current)
+  const pageCurrent = Number(current)
   const offset = postLimit * (pageCurrent - 1)
   const limitOffset = `limit=${postLimit}&offset=${offset}`
-  const filters = `filters=contributed[contains]${params.authorId}`
+  const filters = `filters=contributed[contains]${authorId}`
   const postsEndpoint = `blogs/?${filters}&${fields}&${limitOffset}`
   const postsData = await getData(postsEndpoint)
   
-  const postEndpoint = `people/${params.authorId}/`
+  const postEndpoint = `people/${authorId}/`
   const postData = await getData(postEndpoint)
 
   // [MICROCMS_API_KEY] not valid
@@ -81,14 +84,14 @@ async function AuthorPage({params, searchParams}: Props) {
 
   return (
    <>
-    <AuthorMV authorId={params.authorId} draftKey={searchParams.draftKey} />
+    <AuthorMV authorId={authorId} draftKey={draftKey} />
     <Divider type={'slash'} />
     <div className="main__wrapper page--author">
       <div className="main__container container">
         <div className="main__inner">
           <div className="main__content">
             <PostRecent title='携わった記事一覧' articles={postsData.contents} />
-            <Pagination totalCount={postsData.totalCount} basePath={`/author/${params.authorId}`} pageCurrent={pageCurrent} />
+            <Pagination totalCount={postsData.totalCount} basePath={`/author/${authorId}`} pageCurrent={pageCurrent} />
           </div>
           <Sidebar />
         </div>

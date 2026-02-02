@@ -9,25 +9,26 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string,
     current: string,
-  },
-  searchParams: {
-    draftKey: string,
-  }
+  }>
+  searchParams: Promise<{
+    draftKey?: string,
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params, searchParams}: Props, parent: ResolvingMetadata) {
   const settingsData = await getData('settings/')
-  const catEndpoint = `category/${params.slug}/`
+  const { slug } = await params
+  const catEndpoint = `category/${slug}/`
   const catData = await getData(catEndpoint)
   const parentData = await(parent)
   const previousPreview = parentData.openGraph?.images || []
 
-  const draftKey = searchParams.draftKey
-  const endpoint = `category/${params.slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
+  const { draftKey } = await searchParams
+  const endpoint = `category/${slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
   const microData = await getData(endpoint)
 
   // Title & description
@@ -58,10 +59,11 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
 
 
 async function CategoryPage({ params }: Props) {
+  const { slug, current } = await params
 
   /** Get data */
   const settingsData = await getData('settings/')
-  const endpoint = `category/${params.slug}/`
+  const endpoint = `category/${slug}/`
   const microData = await getData(endpoint)
   
   const catName = microData.name
@@ -69,7 +71,7 @@ async function CategoryPage({ params }: Props) {
   const fields = defaultSettings.queryFields
   const postLimit = settingsData.postLimit || defaultSettings.postLimit
 
-  const pageCurrent = Number(params.current)
+  const pageCurrent = Number(current)
   const offset = postLimit * (pageCurrent - 1)
   const limitOffset = `limit=${postLimit}&offset=${offset}`
   const filters = `filters=category[equals]${catId}`
@@ -93,7 +95,7 @@ async function CategoryPage({ params }: Props) {
           <div className="main__inner">
             <div className="main__content">
               <PostRecent articles={postsData.contents} />
-              <Pagination totalCount={postsData.totalCount} basePath={`/category/${params.slug}`} pageCurrent={pageCurrent} />
+              <Pagination totalCount={postsData.totalCount} basePath={`/category/${slug}`} pageCurrent={pageCurrent} />
             </div>
             <Sidebar />
           </div>

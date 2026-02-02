@@ -8,12 +8,12 @@ import { ResolvingMetadata } from 'next'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string
-  },
-  searchParams: {
+  }>
+  searchParams: Promise<{
     q?: string
-  }
+  }>
 }
 
 /** MetaData */
@@ -24,10 +24,11 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
   const previousPreview = parentData.openGraph?.images || []
   const favicon = settingsData.favicon
   const faviconUrl = favicon ? favicon.url : '/images/favicon.ico'
+  const { q } = await searchParams
 
   // Title & description
-  let titlePage = `《${searchParams.q}》の検索結果`
-  let description = `《${searchParams.q}》の検索結果ページです。`
+  let titlePage = `《${q}》の検索結果`
+  let description = `《${q}》の検索結果ページです。`
   let siteName = `| ${settingsData.siteName}`
   if (settingsData.status === 401) {
     titlePage = defaultSettings.serverError
@@ -56,9 +57,10 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
 }
 
 async function SearchPage({ params, searchParams }: Props) {
+  const { q } = await searchParams
 
   /** Get data */
-  const paramQuery = searchParams.q
+  const paramQuery = q
   const settingsData = await getData('settings/')
   
   const fields = defaultSettings.queryFields

@@ -9,17 +9,18 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string,
     current: string,
-  }
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params}: Props, parent: ResolvingMetadata) {
   const parentData = await(parent)
   const settingsData = await getData('settings/')
-  const tagEndpoint = `tag/${params.slug}/`
+  const { slug } = await params
+  const tagEndpoint = `tag/${slug}/`
   const tagData = await getData(tagEndpoint)
   const previousPreview = parentData.openGraph?.images || []
   
@@ -50,10 +51,11 @@ export async function generateMetadata({params}: Props, parent: ResolvingMetadat
 }
 
 async function TagPage({params}: Props) {
+  const { slug, current } = await params
 
   /** Get data */
   const settingsData = await getData('settings/')
-  const endpoint = `tag/${params.slug}/`
+  const endpoint = `tag/${slug}/`
   const microData = await getData(endpoint)
   
   const tagName = microData.name
@@ -61,7 +63,7 @@ async function TagPage({params}: Props) {
   const fields = defaultSettings.queryFields
   const postLimit = settingsData.postLimit || defaultSettings.postLimit
 
-  const pageCurrent = Number(params.current)
+  const pageCurrent = Number(current)
   const offset = postLimit * (pageCurrent - 1)
   const limitOffset = `limit=${postLimit}&offset=${offset}`
   const filters = `filters=tags[contains]${tagId}`
@@ -85,7 +87,7 @@ async function TagPage({params}: Props) {
           <div className="main__inner">
             <div className="main__content">
               <PostRecent articles={postsData.contents} />
-              <Pagination totalCount={postsData.totalCount} basePath={`/tag/${params.slug}/`} pageCurrent={pageCurrent} />
+              <Pagination totalCount={postsData.totalCount} basePath={`/tag/${slug}/`} pageCurrent={pageCurrent} />
             </div>
             <Sidebar />
           </div>

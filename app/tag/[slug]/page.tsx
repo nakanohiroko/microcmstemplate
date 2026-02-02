@@ -9,19 +9,20 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string,
-  },
-  searchParams: {
-    draftKey: string,
-  }
+  }>
+  searchParams: Promise<{
+    draftKey?: string,
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params}: Props, parent: ResolvingMetadata) {
   const parentData = await(parent)
   const settingsData = await getData('settings/')
-  const tagEndpoint = `tag/${params.slug}/`
+  const { slug } = await params
+  const tagEndpoint = `tag/${slug}/`
   const tagData = await getData(tagEndpoint)
   const previousPreview = parentData.openGraph?.images || []
   const favicon = settingsData.favicon
@@ -63,11 +64,12 @@ export async function generateMetadata({params}: Props, parent: ResolvingMetadat
 
 
 async function TagPage({params, searchParams} : Props) {
+  const { slug } = await params
+  const { draftKey } = await searchParams
 
   /** Get data */
-  const draftKey = searchParams.draftKey
   const settingsData = await getData('settings/')
-  const endpoint = `tag/${params.slug}${draftKey ? ('?draftKey=' + draftKey) : ''}`
+  const endpoint = `tag/${slug}${draftKey ? ('?draftKey=' + draftKey) : ''}`
   const microData = await getData(endpoint)
   
   const tagName = microData.name
@@ -79,7 +81,7 @@ async function TagPage({params, searchParams} : Props) {
   const postsEndpoint = `blogs?${filters}&${fields}&${limitOffset}`
   const postsData = await getData(postsEndpoint)
 
-  const tagEndpoint = `tag/${params.slug}/`
+  const tagEndpoint = `tag/${slug}/`
   const tagData = await getData(tagEndpoint)
   
   // [MICROCMS_API_KEY] not valid
@@ -99,7 +101,7 @@ async function TagPage({params, searchParams} : Props) {
           <div className="main__inner">
             <div className="main__content">
               <PostRecent articles={postsData.contents} />
-              <Pagination totalCount={postsData.totalCount} basePath={`/tag/${params.slug}/`} pageCurrent={1} />
+              <Pagination totalCount={postsData.totalCount} basePath={`/tag/${slug}/`} pageCurrent={1} />
             </div>
             <Sidebar />
           </div>

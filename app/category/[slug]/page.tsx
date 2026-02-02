@@ -9,26 +9,27 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string,
-  },
-  searchParams: {
-    draftKey: string,
-  }
+  }>
+  searchParams: Promise<{
+    draftKey?: string,
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params, searchParams}: Props, parent: ResolvingMetadata) {
   const settingsData = await getData('settings/')
-  const catEndpoint = `category/${params.slug}/`
+  const { slug } = await params
+  const catEndpoint = `category/${slug}/`
   const catData = await getData(catEndpoint)
   const parentData = await(parent)
   const previousPreview = parentData.openGraph?.images || []
   const favicon = settingsData.favicon
   const faviconUrl = favicon ? favicon.url : '/images/favicon.ico'
 
-  const draftKey = searchParams.draftKey
-  const endpoint = `category/${params.slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
+  const { draftKey } = await searchParams
+  const endpoint = `category/${slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
   const microData = await getData(endpoint)
 
   // Title & description
@@ -67,11 +68,12 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
 
 
 async function CategoryPage({ params, searchParams }: Props) {
+  const { slug } = await params
+  const { draftKey } = await searchParams
 
   /** Get data */
-  const draftKey = searchParams.draftKey
   const settingsData = await getData('settings/')
-  const endpoint = `category/${params.slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
+  const endpoint = `category/${slug}${ draftKey ? ('?draftKey=' + draftKey) : ''}`
   const microData = await getData(endpoint)
   
   const catName = microData.name
@@ -100,7 +102,7 @@ async function CategoryPage({ params, searchParams }: Props) {
           <div className="main__inner">
             <div className="main__content">
               <PostRecent articles={postsData.contents} />
-              <Pagination totalCount={postsData.totalCount} basePath={`/category/${params.slug}`} pageCurrent={1} />
+              <Pagination totalCount={postsData.totalCount} basePath={`/category/${slug}`} pageCurrent={1} />
             </div>
             <Sidebar />
           </div>

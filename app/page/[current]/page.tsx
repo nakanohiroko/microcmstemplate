@@ -8,14 +8,15 @@ import NotFound from '@/app/not-found'
 import Error from '@/app/error'
 
 /** Dymanic Metadata */
-export async function generateMetadata({params}: {params: {current: string}}, parent: ResolvingMetadata) {
+export async function generateMetadata({params}: {params: Promise<{current: string}>}, parent: ResolvingMetadata) {
   const parentData = await(parent)
   const settingsData = await getData('settings/')
   const previousPreview = parentData.openGraph?.images || []
   const favicon = settingsData.favicon
   const faviconUrl = favicon ? favicon.url : '/images/favicon.ico'
 
-  const pageCurrent = Number(params.current)
+  const { current } = await params
+  const pageCurrent = Number(current)
   const postLimit = settingsData.postLimit || defaultSettings.postLimit
   const MVpostLimit = defaultSettings.postMainVisualLimit
   const offset = (postLimit * (pageCurrent - 1)) + MVpostLimit
@@ -60,7 +61,7 @@ export async function generateMetadata({params}: {params: {current: string}}, pa
   }
 }
 
-export default async function Home({params}: {params: {current: string}}) {
+export default async function Home({params}: {params: Promise<{current: string}>}) {
   const settingsData = await getData('settings/')
 
   /**Get 3 feature posts */
@@ -77,7 +78,8 @@ export default async function Home({params}: {params: {current: string}}) {
   })
 
   /** Get post without feature posts */
-  const pageCurrent = Number(params.current)
+  const { current } = await params
+  const pageCurrent = Number(current)
   const postLimit = settingsData.postLimit || defaultSettings.postLimit
   const MVpostLimit = defaultSettings.postMainVisualLimit
   const offset = (postLimit * (pageCurrent - 1)) + MVpostLimit

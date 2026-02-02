@@ -8,7 +8,7 @@ import avatar from '@/public/images/avatar-1.png'
 
 async function AuthorMV({authorId, draftKey}: {
   authorId: string,
-  draftKey: string,
+  draftKey?: string,
 }) {
   const socialList = [
     {

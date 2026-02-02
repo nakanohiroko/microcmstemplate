@@ -9,19 +9,20 @@ import Error from '@/app/error'
 import { defaultSettings } from '@/contants/defaultSettings'
 
 type Props = {
-  params: {
+  params: Promise<{
     pid: string
-  },
-  searchParams: {
-    draftKey: string,
-  }
+  }>
+  searchParams: Promise<{
+    draftKey?: string
+  }>
 }
 
 /** MetaData */
 export async function generateMetadata({params, searchParams}: Props, parent: ResolvingMetadata) {
   const settingsData = await getData('settings/')
   const parentData = await(parent)
-  const postEndpoint = `blogs/${params.pid}/`
+  const { pid } = await params
+  const postEndpoint = `blogs/${pid}/`
   const postData = await getData(postEndpoint)
   
   const description = `${postData.description || ''}`
@@ -62,7 +63,9 @@ export async function generateMetadata({params, searchParams}: Props, parent: Re
 }
 
 export default async function ArticlePage({params, searchParams}: Props) {
-  const postEndpoint = `blogs/${params.pid}/`
+  const { pid } = await params
+  const { draftKey } = await searchParams
+  const postEndpoint = `blogs/${pid}/`
   const postData = await getData(postEndpoint)
 
   // [MICROCMS_API_KEY] not valid
@@ -79,9 +82,9 @@ export default async function ArticlePage({params, searchParams}: Props) {
       <div className="main__container container">
         <div className="main__inner">
           <div className="main__content">
-            <ArticleDetail postId={params.pid} draftKey={searchParams.draftKey} />
-            <AuthorContributed postId={params.pid} />
-            <PostRelated postId={params.pid} />
+            <ArticleDetail postId={pid} draftKey={draftKey} />
+            <AuthorContributed postId={pid} />
+            <PostRelated postId={pid} />
           </div>
           <Sidebar />
         </div>
