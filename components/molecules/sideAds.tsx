@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { Fragment } from 'react'
 import { Adsvertisment } from '@/utils/postDataType'
 
 
@@ -46,7 +47,11 @@ function AdsItem(ads: Adsvertisment, isPriority?: boolean) {
 
 function SideAds({listAds, isPriority}: {listAds: Adsvertisment[], isPriority?: boolean }) {
   return (
-    !!listAds?.length && listAds.map(ads => AdsItem(ads, isPriority))
+    !!listAds?.length && listAds.map(ads => (
+      <Fragment key={`${ads.link}|${ads.image.url}|${ads.name}`}>
+        {AdsItem(ads, isPriority)}
+      </Fragment>
+    ))
   )
 }
 
